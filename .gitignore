@@ -1,0 +1,11 @@
+# ignore python venv
+.venv
+
+# vscode
+.vscode
+
+# ipython
+.ipython
+
+# ignore vrep-scenes zip
+debug/
