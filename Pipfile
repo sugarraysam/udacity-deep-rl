@@ -3,15 +3,16 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[packages]
-
 [dev-packages]
+torch = "*"
+torchvision ="*"
 ipython = "*"
 numpy = "*"
 scipy = "*"
 matplotlib = "*"
-pybullet = "*"
+pandas = "*"
 gym = {version = "*", extras = ["atari", "box2d", "classic_control"]}
+core = {editable = true, path = './core'}
 
 [requires]
 python_version = "3.8"
