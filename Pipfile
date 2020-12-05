@@ -4,15 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-torch = "*"
-torchvision ="*"
 ipython = "*"
-numpy = "*"
-scipy = "*"
-matplotlib = "*"
-pandas = "*"
+pytest = "*"
+jupyter = "*"
 gym = {version = "*", extras = ["atari", "box2d", "classic_control"]}
-core = {editable = true, path = './core'}
+torch = "*"
+numpy = "*"
+torchvision = "*"
 
 [requires]
 python_version = "3.8"

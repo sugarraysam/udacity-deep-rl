@@ -4,8 +4,13 @@
 # vscode
 .vscode
 
-# ipython
+# ipython/jupyter
 .ipython
+.ipynb_checkpoints
 
 # ignore vrep-scenes zip
 debug/
+
+# unity
+navigation/Banana_Linux/
+unity-environment.log

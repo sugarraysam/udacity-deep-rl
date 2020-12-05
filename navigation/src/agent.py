@@ -2,7 +2,7 @@ import numpy as np
 import random
 from collections import namedtuple, deque
 
-from core.model import QNetwork
+from .model import QNetwork
 
 import torch
 import torch.nn.functional as F
@@ -22,7 +22,7 @@ class Agent:
     """Interacts with and learns from the environment."""
 
     def __init__(self, state_size, action_size, seed):
-        """Initialize an Agent object.
+                """Initialize an Agent object.
 
         Params
         ======
@@ -42,11 +42,11 @@ class Agent:
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
         # Initialize time step (for updating every UPDATE_EVERY steps)
-        self.t_step = 0
+            self.t_step = 0
 
     def step(self, state, action, reward, next_state, done):
         # Save experience in replay memory
-        self.memory.add(state, action, reward, next_state, done)
+                self.memory.add(state, action, reward, next_state, done)
 
         # Learn every UPDATE_EVERY time steps.
         self.t_step = (self.t_step + 1) % UPDATE_EVERY
@@ -57,7 +57,7 @@ class Agent:
                 self.learn(experiences, GAMMA)
 
     def act(self, state, eps=0.0):
-        """Returns actions for given state as per current policy.
+                """Returns actions for given state as per current policy.
 
         Params
         ======
@@ -71,7 +71,7 @@ class Agent:
         self.qnetwork_local.train()
 
         # Epsilon-greedy action selection
-        if np.random.uniform(0, 1) > eps:
+        if random.random() > eps:
             return np.argmax(action_values.cpu().data.numpy())
         else:
             return random.choice(np.arange(self.action_size))
@@ -81,7 +81,7 @@ class Agent:
 
         Params
         ======
-            experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
+            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples
             gamma (float): discount factor
         """
         states, actions, rewards, next_states, dones = experiences
@@ -135,12 +135,12 @@ class ReplayBuffer:
             action_size (int): dimension of each action
             buffer_size (int): maximum size of buffer
             batch_size (int): size of each training batch
-            seed (int): random seed
+                seed (int): random seed
         """
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
-        self.experience = namedtuple(
+            self.experience = namedtuple(
             "Experience",
             field_names=["state", "action", "reward", "next_state", "done"],
         )

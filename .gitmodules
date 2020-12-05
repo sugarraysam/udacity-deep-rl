@@ -1,3 +1,4 @@
 [submodule "deep-reinforcement-learning"]
-	path = deep-reinforcement-learning
-	url = https://github.com/udacity/deep-reinforcement-learning.git
+    path = deep-reinforcement-learning
+    url = https://github.com/udacity/deep-reinforcement-learning.git
+    ignore = all
