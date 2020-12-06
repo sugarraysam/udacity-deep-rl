@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 # Hyperparameters
 CAPACITY = int(1e5)
@@ -8,7 +9,7 @@ BETA_STEPS_TO_ONE = 2000
 
 
 class PrioritizedReplayBuffer:
-    def __init__(self, batch_size, seed=42):
+    def __init__(self, batch_size, capacity=CAPACITY, seed=42):
         """
         Implementation of described improvement on DQN from:
         https://arxiv.org/pdf/1511.05952.pdf
@@ -22,18 +23,16 @@ class PrioritizedReplayBuffer:
         - O(CAPACITY * 2) memory requirements because we are keeping track of samples and priorities
             separately. Need to explore 'sum-tree' or binary heap like the paper mentions.
         """
+        self.capacity = capacity
         self.batch_size = batch_size
-        self.capacity = CAPACITY
         self.pos = 0
         self.memory = []
-        self.priorities = np.zeros((CAPACITY,), dtype=np.float32)
+        self.priorities = np.zeros((capacity,), dtype=np.float32)
         self.max_priority = 1.0
         self.last_sample_indices = None
 
         # Hyperparams
-        self.alpha = ALPHA
-        self.beta = self.beta_start = BETA_START
-        self.beta_steps_to_one = BETA_STEPS_TO_ONE
+        self.beta = BETA_START
         self.rng = np.random.RandomState(seed)
 
     def add(self, state, action, reward, next_state, done):
@@ -45,7 +44,7 @@ class PrioritizedReplayBuffer:
         if len(self.memory) < self.capacity:
             self.memory.append(experience)
         else:
-            self.buffer[self.pos] = experience
+            self.memory[self.pos] = experience
 
         self.priorities[self.pos] = self.max_priority
         self.pos = (self.pos + 1) % self.capacity
@@ -56,8 +55,7 @@ class PrioritizedReplayBuffer:
         self.last_sample_indices = indices
         weights = self._get_weights(probs[indices])
         samples = [self.memory[i] for i in indices]
-        states, actions, rewards, next_states, dones = zip(*samples)
-        return states, actions, rewards, next_states, dones, weights
+        return samples, weights
 
     def _get_probs(self):
         """
@@ -65,7 +63,7 @@ class PrioritizedReplayBuffer:
         P(i) = p_i^(alpha) / sum_k(p_k^(alpha))
         """
         end = max(self.pos, len(self.memory))
-        probs = self.priorities[:end] ** self.alpha
+        probs = self.priorities[:end] ** ALPHA
         return probs / probs.sum()
 
     def _get_weights(self, P):
@@ -74,9 +72,7 @@ class PrioritizedReplayBuffer:
         w_j = (N * P(j))^(-beta) / max_i(w_i)
         """
         # slowly increase beta to reach 1.0
-        self.beta = max(
-            1.0, self.beta + (1.0 - self.beta_start) / self.beta_steps_to_one
-        )
+        self.beta = max(1.0, self.beta + (1.0 - BETA_START) / BETA_STEPS_TO_ONE)
         N = len(self.memory)
         weights = (N * P) ** (-self.beta)
         return weights / weights.max()
