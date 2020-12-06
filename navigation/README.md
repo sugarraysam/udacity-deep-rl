@@ -4,6 +4,7 @@
   - [Environment](#environment)
 - [Installation](#installation)
 - [Tests](#tests)
+- [Training the agent](#training-the-agent)
 - [Report](#report)
   - [Hyperparameters for `agent.Agent`](#hyperparameters-for-agentagent)
   - [Hyperparameters for `replay.PrioritizedReplayBuffer`](#hyperparameters-for-replayprioritizedreplaybuffer)
@@ -65,6 +66,19 @@ $ cd navigation
 $ ./run_tests.sh
 ```
 
+# Training the agent
+
+The training code lives inside the jupyter notebook `Navigation.ipynb`. You can run the notebook server with the appropriate python version and packages:
+
+```bash
+# Launch jupyter notebook server
+$ make jupyter
+```
+
+After, navigate to `Navigation.ipynb` inside your browser. You can see the output of the previously ran code. If you've setup everything correctly, you can go ahead and rerun the cells, to see a live training of the agent.
+
+The code should work on GPU as well, although I have not tested this.
+
 # Report
 
 I decided to solve this environment using the Deep-Q-Learning algorithm with Prioritized Replay Buffer. I set the episode limit to 2000, but I am not limiting the number of timesteps per episode because the rewards are received frequently enough to ensure proper learning.
@@ -112,7 +126,7 @@ A couple of interesting points about the DQN algorithm:
 
 # Ideas for the future
 
-There are a few extensions to vanilla DQN, that improve and push the boundaries of what is the state-of-the-art DQN implmentation. In the future, it would be important to understand and implement each of those extensions. They are all listed on this great resource I found:
+There are a few extensions to vanilla DQN, that improve and push the boundaries of what is the state-of-the-art DQN implementation. In the future, it would be important to understand and implement each of those extensions. They are all listed on this great resource I found:
 
 - [DQN Adventure: from Zero to State of the Art](https://github.com/higgsfield/RL-Adventure)
 

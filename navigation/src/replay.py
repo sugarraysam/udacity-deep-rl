@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 # Hyperparameters
 CAPACITY = int(1e5)
