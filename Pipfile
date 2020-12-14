@@ -11,6 +11,7 @@ gym = {version = "*", extras = ["atari", "box2d", "classic_control"]}
 torch = "*"
 numpy = "*"
 torchvision = "*"
+control = {editable = true, path = "./control"}
 
 [requires]
 python_version = "3.8"

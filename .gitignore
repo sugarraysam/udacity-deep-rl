@@ -13,4 +13,9 @@ debug/
 
 # unity
 navigation/Banana_Linux/
+control/Reacher_Linux/
 unity-environment.log
+
+# python pkg files
+**/pyproject.toml
+**/*.egg-info
