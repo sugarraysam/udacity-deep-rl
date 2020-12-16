@@ -21,12 +21,12 @@ def test_agent_single_step():
     next_states, rewards, dones = env.step(actions)
 
     assert agent.last_out is not None
-    assert len(agent.mb) == 0
+    assert len(agent.minibatch) == 0
 
     loss = agent.step(next_states, rewards, dones)
 
     assert loss is None
-    assert len(agent.mb) == 1
+    assert len(agent.minibatch) == 1
 
 
 def test_agent_single_batch():
@@ -56,12 +56,12 @@ def test_agent_multiple_batch():
 
     last_params = deepcopy(agent.model.state_dict())
     states = env.reset()
-    for i in range(1, t + 1):
+    for i in range(t):
         actions = agent.act(states)
         next_states, rewards, dones = env.step(actions)
         loss = agent.step(next_states, rewards, dones)
-        states = env.reset() if dones.any() else next_states
-        if i % batch_size == 0:
+        states = env.reset() if any(dones) else next_states
+        if i > 0 and len(agent.minibatch) == 0:
             assert loss is not None and not isinstance(loss, torch.Tensor)
             losses.append(loss)
             assert not params_are_equal(last_params, agent.model.state_dict())

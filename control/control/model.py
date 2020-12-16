@@ -10,37 +10,32 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-HIDDEN_DIM = [64, 64]
+HIDDEN_DIM = [200, 128]
 ACTION_MIN = -1.0
 ACTION_MAX = 1.0
 
 A2COut = namedtuple("A2COut", ["actions", "log_probs", "entropy", "v"])
 
 
-class Mish(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, obs):
-        return obs * torch.tanh(F.softplus(obs))
-
-
 class A2CGaussian(nn.Module):
+    """
+    All non-output layers are shared between actor and critic.
+    Actor output is of shape (2, action_dim), which corresponds to a vector for means
+    and a vector for standard deviations of an underlying normal distribution.
+    Critic tries to approximate the state-value function.
+    """
+
     def __init__(
-        self, state_dim, action_dim, hidden_dim=HIDDEN_DIM, seed=42, activation=Mish
+        self, state_dim, action_dim, hidden_dim=HIDDEN_DIM, seed=42, activation=nn.ReLU
     ):
         super().__init__()
         self.seed = torch.manual_seed(seed)
+        self.state_dim = state_dim
+        self.action_dim = action_dim
         self.activation = activation
-        self.actor = nn.Sequential(
-            *self._get_layers(state_dim, hidden_dim),
-            nn.Linear(hidden_dim[-1], action_dim),
-        )
-        self.critic = nn.Sequential(
-            *self._get_layers(state_dim, hidden_dim),
-            nn.Linear(hidden_dim[-1], 1),
-        )
-        self.stds = nn.Parameter(torch.zeros(action_dim))
+        self.base = nn.Sequential(*self._get_layers(state_dim, hidden_dim))
+        self.actor_out = nn.Linear(hidden_dim[-1], action_dim * 2)
+        self.critic_out = nn.Linear(hidden_dim[-1], 1)
         self.to(DEVICE)
 
     def _get_layers(self, state_dim, hidden_dim):
@@ -56,18 +51,21 @@ class A2CGaussian(nn.Module):
     def forward(self, states):
         """
         Forward pass through network, returns actions, log_probs, v and entropy.
-        States are numpy arrays of shape (n_agents, state_dim)
-        We use tanh because our control actions need to have values between -1.0, 1.0
+        States are numpy arrays of shape (n_agents, state_dim).
+        We use tanh on the means because our control actions need to have values between -1.0, 1.0.
+        We use softplus on the sigmas, so they are greater than 0.
         """
-        means = torch.tanh(self.actor(states))
-        v = self.critic(states)
-        dist = torch.distributions.Normal(means, F.softplus(self.stds))
+        x = self.base(states)
+        a_out = self.actor_out(x)
+        c_out = self.critic_out(x)
+        means, sigmas = a_out[:, : self.action_dim], a_out[:, self.action_dim :]
+        dist = torch.distributions.Normal(torch.tanh(means), F.softplus(sigmas))
         actions = dist.sample()
         return A2COut(
             actions=torch.clamp(actions, ACTION_MIN, ACTION_MAX),
             log_probs=dist.log_prob(actions).sum(dim=1),
             entropy=dist.entropy().sum(dim=1),
-            v=v,
+            v=c_out,
         )
 
     def checkpoint(self, path="checkpoint.pth"):

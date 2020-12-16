@@ -6,7 +6,7 @@ import torch
 # Hyperparameters
 DISCOUNT = 0.99  # discount factor
 TAU = 1.0  # for advantages (GAE)
-ENTROPY_LOSS_WEIGHT = 0.01  # importance of entropy loss
+ENTROPY_LOSS_WEIGHT = 0.01  # importance of entropy loss (beta)
 CRITIC_LOSS_WEIGHT = 1.0  # importance of critic loss
 
 Sample = namedtuple("sample", ["rewards", "dones", "log_probs", "v", "entropy"])
@@ -19,15 +19,11 @@ class MiniBatch:
 
     def __init__(
         self,
-        n_agents,
-        batch_size,
         discount=DISCOUNT,
         tau=TAU,
         e_weight=ENTROPY_LOSS_WEIGHT,
         c_weight=CRITIC_LOSS_WEIGHT,
     ):
-        self.batch_size = batch_size
-        self.n_agents = n_agents
         self.samples = []
         # Learning hyper params
         self.discount = discount
@@ -47,9 +43,9 @@ class MiniBatch:
         self.samples = []
         advantages, returns = self._compute_advantages_and_returns(rewards, dones, v)
 
-        print(f"v_next_mean: {v_next.mean()}, v_mean: {v[:-1].mean()}")
-        print(f"advantages_mean: {advantages.mean()}")
-        print(f"returns_mean: {returns.mean()}")
+        # print(f"v_next_mean: {v_next.mean()}, v_mean: {v[:-1].mean()}")
+        # print(f"advantages_mean: {advantages.mean()}")
+        # print(f"returns_mean: {returns.mean()}")
 
         a_loss = -(log_probs * advantages).mean()
         c_loss = 0.5 * (returns - v[:-1]).pow(2).mean()
@@ -62,6 +58,7 @@ class MiniBatch:
         Dones are 0 if true, and 1 if false, so we can use them in equations.
         """
         rewards, dones, log_probs, v, entropy = zip(*self.samples)
+        batch_size, n_agents = len(rewards), len(rewards[0])
 
         rewards = self._normalize_rewards(torch.tensor(rewards, dtype=torch.float32))
         dones = 1.0 - torch.tensor(dones, dtype=torch.float32)
@@ -69,22 +66,21 @@ class MiniBatch:
         v = torch.cat([*v, v_next.view_as(v[0])])
         entropy = torch.cat(entropy)
 
-        bs, na = self.batch_size, self.n_agents
         return (
-            rewards.reshape(bs, na).to(DEVICE),
-            dones.reshape(bs, na).to(DEVICE),
-            log_probs.reshape(bs, na).to(DEVICE),
-            v.reshape(bs + 1, na).to(DEVICE),
-            entropy.reshape(bs, na).to(DEVICE),
+            rewards.reshape(batch_size, n_agents).to(DEVICE),
+            dones.reshape(batch_size, n_agents).to(DEVICE),
+            log_probs.reshape(batch_size, n_agents).to(DEVICE),
+            v.reshape(batch_size + 1, n_agents).to(DEVICE),
+            entropy.reshape(batch_size, n_agents).to(DEVICE),
         )
 
     def _compute_advantages_and_returns(self, rewards, dones, v):
-        t, n_agents = rewards.shape[0], rewards.shape[1]
+        batch_size, n_agents = rewards.shape[0], rewards.shape[1]
         all_advantages, all_returns = [], []
 
         advantages = torch.zeros(n_agents)
         returns = v[-1].clone()
-        for i in reversed(range(t)):
+        for i in reversed(range(batch_size)):
             returns = rewards[i] + self.discount * dones[i] * returns
             td_error = rewards[i] + self.discount * dones[i] * v[i + 1] - v[i]
             advantages = advantages * self.tau * self.discount * dones[i] + td_error

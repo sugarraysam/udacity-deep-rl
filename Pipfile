@@ -5,13 +5,15 @@ name = "pypi"
 
 [dev-packages]
 ipython = "*"
-pytest = "*"
 jupyter = "*"
+pytest = "~=6.1"
+torch = "~=1.7"
+numpy = "~=1.19"
 gym = {version = "*", extras = ["atari", "box2d", "classic_control"]}
-torch = "*"
-numpy = "*"
-torchvision = "*"
 control = {editable = true, path = "./control"}
 
 [requires]
 python_version = "3.8"
+
+[packages]
+sklearn = "*"
