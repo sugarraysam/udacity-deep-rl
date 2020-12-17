@@ -18,6 +18,8 @@
 
 We are solving the Reacher environment. The agent's goal is to move a double-jointed arm to a location and keep it there. I will be solving the *Option 2 - Distributed Training* version of the environment, where 20 identical agents have their own copy of the environment.
 
+The task is episodic and each episode stops after 1000 time steps.
+
 To solve this problem, the agents must get an average score of +30, over 100 consecutive episodes, and over all agents. Specifically:
 
 - After each episode, add the undiscounted rewards for all agents (separately)
@@ -55,7 +57,7 @@ $ cd deep-reinforcement-learning/python
 $ pip install .
 ```
 
-Finally, you need to setup the Unity Banana environment for your machine. Please see the [instructions](https://github.com/udacity/deep-reinforcement-learning/tree/master/p1_navigation).
+Finally, you need to setup the Unity Reacher environment for your machine. Please see the [instructions](https://github.com/udacity/deep-reinforcement-learning/tree/master/p2_continuous-control).
 
 # Tests
 

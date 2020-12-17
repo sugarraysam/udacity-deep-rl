@@ -69,6 +69,9 @@ def test_agent_multiple_batch():
 
     assert len(losses) == (t // batch_size)
 
+def test_gradient_is_stable():
+    # TODO: use pdb, debug pytorch graph, see what is going on
+    assert True == False
 
 CHECKPOINT = "control/tests/checkpoint.pth"
 

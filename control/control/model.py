@@ -10,7 +10,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-HIDDEN_DIM = [200, 128]
+HIDDEN_DIM = [32]
 ACTION_MIN = -1.0
 ACTION_MAX = 1.0
 
