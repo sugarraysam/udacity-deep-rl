@@ -4,9 +4,10 @@ Exercices and materials for the [Deep Reinforcement Learning Nanodagree - Udacit
 
 # Projects
 
-| Name                               | Description                                                             |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| [Navigation](navigation/README.md) | Collection bananas using a DQN agent with Prioritized Experience Replay |
+| Name                                    | Description                                                          |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| [Navigation](navigation/README.md)      | Collect bananas using a DQN agent with Prioritized Experience Replay |
+| [Continuous Control](control/README.md) | Control 20 double-jointed robot arms using A2C with GAE (ongoing)    |
 
 # Resources
 
