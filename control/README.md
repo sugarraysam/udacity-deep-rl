@@ -16,7 +16,7 @@
 
 ## Environment
 
-We are solving the Reacher environment. The agent's goal is to move a double-jointed arm to a location and keep it there. I will be solving the *Option 2 - Distributed Training* version of the environment, where 20 identical agents have their own copy of the environment.
+We are solving the [Reacher](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher) environment. The agent's goal is to move a double-jointed arm to a location and keep it there. I will be solving the _Option 2 - Distributed Training_ version of the environment, where 20 identical agents have their own copy of the environment.
 
 The task is episodic and each episode stops after 1000 time steps.
 
@@ -36,7 +36,6 @@ To solve this problem, the agents must get an average score of +30, over 100 con
 **Actions - Continuous**
 
 Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1.
-
 
 # Installation
 
@@ -130,14 +129,13 @@ The code should work on GPU as well, although I have not tested this.
 | ------------------ | :-----: |
 | Hidden layer sizes | [64,64] |
 
-
 # Ideas for the future
 
 TODO
 
 # Resources
 
-- [Reader ML Environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher)
+- [Reacher ML Environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher)
 - [Asynchronous Methods for Deep Reinforcement Learning](https://arxiv.org/abs/1602.01783v2)
 - [High-Dimensional Continuous Control Using Generalized Advantage Estimation](https://arxiv.org/abs/1506.02438)
 - [ShangtongZhang/DeepRL](https://github.com/ShangtongZhang/DeepRL)

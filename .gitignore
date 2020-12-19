@@ -19,3 +19,4 @@ unity-environment.log
 # python pkg files
 **/pyproject.toml
 **/*.egg-info
+**/__pycache__/

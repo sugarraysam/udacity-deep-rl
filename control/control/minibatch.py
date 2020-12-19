@@ -2,6 +2,7 @@ from control.model import DEVICE
 from collections import namedtuple
 
 import torch
+import numpy as np
 
 # Hyperparameters
 DISCOUNT = 0.99  # discount factor
@@ -30,6 +31,7 @@ class MiniBatch:
         self.tau = tau
         self.e_weight = e_weight
         self.c_weight = c_weight
+        self.rewards_normalizer = Normalizer()
 
     def append(self, sample):
         self.samples.append(sample)
@@ -40,7 +42,6 @@ class MiniBatch:
         All tensors are of shape (batch_size, n_agents) except for v, because we appended v_next.
         """
         rewards, dones, log_probs, v, entropy = self._parse_samples(v_next)
-        self.samples = []
         advantages, returns = self._compute_advantages_and_returns(rewards, dones, v)
 
         a_loss = -(log_probs * advantages).mean()
@@ -71,9 +72,10 @@ class MiniBatch:
         Dones are 0 if true, and 1 if false, so we can use them in equations.
         """
         rewards, dones, log_probs, v, entropy = zip(*self.samples)
+        self.samples = []
         t, n_agents = len(rewards), len(rewards[0])
 
-        rewards = self._normalize_rewards(torch.tensor(rewards, dtype=torch.float32))
+        rewards = self.rewards_normalizer(rewards)
         dones = 1.0 - torch.tensor(dones, dtype=torch.float32)
         v = torch.cat([*v, v_next.view_as(v[0])])
 
@@ -85,8 +87,34 @@ class MiniBatch:
             torch.cat(entropy).reshape(t, n_agents).to(DEVICE),
         )
 
-    def _normalize_rewards(self, rewards):
-        return (rewards - rewards.mean()) / (rewards.std() + 1e-5)
-
     def __len__(self):
         return len(self.samples)
+
+
+class Normalizer:
+    """
+    Keep rolling mean and std over a distribution.
+    Receives numpy array and returns torch tensor
+    """
+
+    def __init__(self, alpha=0.01):
+        self.alpha = alpha
+        self.mean = None
+        self.std = None
+
+    def __call__(self, x):
+        if isinstance(x, np.ndarray):
+            x = torch.from_numpy(x).float().to(DEVICE)
+        else:
+            x = torch.tensor(x).float().to(DEVICE)
+
+        # First call init mean and std
+        if self.mean == None:
+            self.mean = x.mean()
+            self.std = x.std()
+        else:
+            self.mean += self.alpha * (x.mean() - self.mean)
+            self.std += self.alpha * (x.std() - self.std)
+
+        # avoid dividing by 0
+        return (x - self.mean) / (1e-6 + self.std)

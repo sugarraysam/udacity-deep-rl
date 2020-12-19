@@ -23,7 +23,7 @@ def test_agent_single_step():
     assert agent.last_out is not None
     assert len(agent.minibatch) == 0
 
-    loss = agent.step(next_states, rewards, dones)
+    loss = agent.step(rewards, dones)
 
     assert loss is None
     assert len(agent.minibatch) == 1
@@ -37,13 +37,15 @@ def test_agent_single_batch():
     initial_params = deepcopy(agent.model.state_dict())
 
     states = env.reset()
-    for i in range(batch_size):
+    rewards = None
+    while True:
+        if rewards is not None and len(agent.minibatch) == 0:
+            assert not params_are_equal(initial_params, agent.model.state_dict())
+            break
         actions = agent.act(states)
         next_states, rewards, dones = env.step(actions)
-        _ = agent.step(next_states, rewards, dones)
-        states = env.reset() if dones.any() else next_states
-
-    assert not params_are_equal(initial_params, agent.model.state_dict())
+        _ = agent.step(rewards, dones)
+        states = env.reset() if any(dones) else next_states
 
 
 def test_agent_multiple_batch():
@@ -59,19 +61,33 @@ def test_agent_multiple_batch():
     for i in range(t):
         actions = agent.act(states)
         next_states, rewards, dones = env.step(actions)
-        loss = agent.step(next_states, rewards, dones)
+        loss = agent.step(rewards, dones)
         states = env.reset() if any(dones) else next_states
         if i > 0 and len(agent.minibatch) == 0:
             assert loss is not None and not isinstance(loss, torch.Tensor)
             losses.append(loss)
+            assert gradients_are_stable(agent.model.parameters())
             assert not params_are_equal(last_params, agent.model.state_dict())
             last_params = deepcopy(agent.model.state_dict())
 
-    assert len(losses) == (t // batch_size)
 
-def test_gradient_is_stable():
-    # TODO: use pdb, debug pytorch graph, see what is going on
-    assert True == False
+def test_agent_env_dones_minibatch_empty():
+    batch_size, n_agents = 4, 4
+    env = DummyEnv(n_agents)
+    state_dim, action_dim = env.dimensions()
+    agent = Agent(state_dim, action_dim, n_agents, batch_size=batch_size)
+    initial_params = deepcopy(agent.model.state_dict())
+
+    states = env.reset()
+    actions = agent.act(states)
+    _, rewards, _ = env.step(actions)
+    dones = [True] * n_agents
+    loss = agent.step(rewards, dones)
+
+    # Make sure no SGD happened
+    assert loss is None
+    assert params_are_equal(initial_params, agent.model.state_dict())
+
 
 CHECKPOINT = "control/tests/checkpoint.pth"
 
@@ -133,5 +149,12 @@ def actions_are_valid(actions):
 def state_dicts_are_equal(sd1, sd2):
     for k in sd1.keys():
         if sd1[k].data.ne(sd2[k].data).sum() > 0:
+            return False
+    return True
+
+
+def gradients_are_stable(params, clip=0.5):
+    for p in params:
+        if (np.abs(p.grad.numpy()) > clip).any():
             return False
     return True
